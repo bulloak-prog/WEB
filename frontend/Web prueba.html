@@ -1,0 +1,1506 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Calendario Moderno</title>
+    <!-- Importar Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Variables de colores para facilitar cambios */
+        :root {
+            --primary-color: #6c5ce7;
+            --secondary-color: #ffeaa7;
+            --background-color: #f1f2f6;
+            --header-color: #4834d4;
+            --text-color: #2d3436;
+            --card-color: #ffffff;
+            --border-color: #dfe6e9;
+            --hover-color: #dcdde1;
+            --active-progress-color: #00b894;
+            --inactive-progress-color: #b2bec3;
+        }
+
+        /* Estilos globales */
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        header {
+            background-color: var(--header-color);
+            color: #fff;
+            padding: 20px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        h1 {
+            margin: 0;
+            font-weight: 500;
+            font-size: 24px;
+        }
+
+        #legend {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-left: 20px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
+            margin-top: 5px;
+            font-size: 14px;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            margin-right: 5px;
+            border-radius: 4px;
+            border: none;
+            position: relative;
+        }
+
+        #hamburger-menu, #progress-icon {
+            cursor: pointer;
+            font-size: 24px;
+            margin-left: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        #hamburger-menu:hover, #progress-icon:hover {
+            transform: scale(1.1);
+        }
+
+        /* Estilos para el menú de eventos y progresos */
+        #event-modal, #progress-modal {
+            display: none; /* Oculto por defecto */
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 300px;
+            height: 100%;
+            background-color: var(--card-color);
+            border-left: 1px solid var(--border-color);
+            z-index: 1001;
+            overflow-y: auto;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        #event-modal.active, #progress-modal.active {
+            display: block;
+            transform: translateX(0);
+        }
+
+        #event-modal h2, #progress-modal h2 {
+            background-color: var(--header-color);
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+            font-weight: 500;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        #event-list, #progress-list {
+            padding: 20px;
+        }
+
+        .event-item, .reminder-item {
+            background-color: var(--card-color);
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .event-item:hover, .reminder-item:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .event-date {
+            font-weight: 500;
+            color: var(--text-color);
+            margin-bottom: 5px;
+        }
+
+        .event-content {
+            color: #636e72;
+        }
+
+        .close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            cursor: pointer;
+            font-size: 24px;
+            color: var(--text-color); /* Cambiado para mayor visibilidad */
+            transition: color 0.3s ease;
+        }
+
+        .close:hover {
+            color: #636e72;
+        }
+
+        /* Estilos para el modal */
+        .modal {
+            display: none; /* Oculto por defecto */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            overflow: auto;
+            z-index: 1002;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background-color: var(--card-color);
+            margin: 5% auto;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        #save-button {
+            background-color: var(--primary-color);
+            color: #fff;
+            border: none;
+            padding: 12px 25px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 25px;
+            transition: background-color 0.3s ease;
+            margin-top: 10px;
+        }
+
+        #save-button:hover {
+            background-color: #5941a9;
+        }
+
+        #entry-text {
+            width: 100%;
+            border: 1px solid var(--border-color);
+            padding: 10px 15px;
+            border-radius: 6px;
+            resize: vertical;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        #entry-text:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+
+        /* Contenedor principal */
+        #main-container {
+            display: flex;
+            padding: 20px 40px;
+            gap: 20px;
+        }
+
+        #left-sidebar {
+            width: 250px;
+            padding: 20px;
+            background-color: var(--card-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            height: fit-content;
+            position: sticky;
+            top: 80px;
+        }
+
+        #main-content {
+            flex: 1;
+        }
+
+        /* Navegación de Mes y Año */
+        #month-year {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        #prev, #next {
+            cursor: pointer;
+            font-size: 24px;
+            margin: 0 20px;
+            color: var(--primary-color);
+            transition: color 0.3s ease, transform 0.3s ease;
+        }
+
+        #prev:hover, #next:hover {
+            color: #341f97;
+            transform: scale(1.1);
+        }
+
+        #monthYearText {
+            font-size: 22px;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+
+        /* Calendario */
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .day-name {
+            font-weight: 500;
+            text-align: center;
+            padding: 12px 0;
+            background-color: var(--primary-color);
+            color: #fff;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .day {
+            background-color: var(--card-color);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            min-height: 100px;
+            position: relative;
+            border: 1px solid var(--border-color);
+            transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .day:hover {
+            background-color: var(--hover-color);
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .day.today {
+            border: 2px solid var(--primary-color);
+        }
+
+        .day.past::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: linear-gradient(135deg, transparent 45%, #ff7675 45%, #ff7675 55%, transparent 55%),
+                              linear-gradient(225deg, transparent 45%, #ff7675 45%, #ff7675 55%, transparent 55%);
+            background-size: 100% 100%;
+            opacity: 0.3;
+            pointer-events: none;
+            border-radius: 8px;
+        }
+
+        .day.has-entry-no-keyword {
+            background-color: #81ecec;
+        }
+
+        .day.has-tarea {
+            background-color: #55efc4;
+        }
+
+        .day.has-prueba {
+            background-color: #fab1a0;
+        }
+
+        .day.has-multiple {
+            background: linear-gradient(135deg, #fab1a0 50%, #55efc4 50%);
+            border-radius: 8px;
+        }
+
+        /* Modal de Progreso */
+        #progress-modal {
+            width: 350px;
+        }
+
+        #progress-icons {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+
+        .progress-icon {
+            width: 40px;
+            height: 40px;
+            background-color: var(--inactive-progress-color);
+            border: 2px solid var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            color: #fff;
+            border-radius: 50%;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        .progress-icon.active {
+            background-color: var(--active-progress-color);
+            transform: scale(1.1);
+        }
+
+        .progress-item {
+            display: none;
+        }
+
+        .progress-item.active {
+            display: block;
+        }
+
+        .progress-item h4 {
+            margin-bottom: 10px;
+            color: var(--text-color);
+            font-size: 18px;
+        }
+
+        .custom-progress-rectangle, .manual-progress-bar-container {
+            width: 100%;
+            height: 20px;
+            background-color: #dfe6e9;
+            margin-top: 10px;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .custom-progress-bar, .manual-progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: var(--primary-color);
+            position: absolute;
+            top: 0;
+            left: 0;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-inputs {
+            margin-top: 15px;
+        }
+
+        .progress-inputs label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: var(--text-color);
+        }
+
+        .progress-inputs input {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .progress-inputs input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+
+        .progress-buttons {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .progress-buttons button {
+            flex: 1;
+            padding: 8px 10px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #fff;
+            transition: background-color 0.3s ease;
+        }
+
+        .add-manual-progress {
+            background-color: var(--active-progress-color);
+        }
+
+        .add-manual-progress:hover {
+            background-color: #00b894cc;
+        }
+
+        .reset-manual-progress {
+            background-color: #d63031;
+        }
+
+        .reset-manual-progress:hover {
+            background-color: #e17055;
+        }
+
+        .manual-progress-bar-container {
+            margin-top: 10px;
+        }
+
+        .manual-progress-count {
+            font-size: 14px;
+            color: var(--text-color);
+            margin-top: 5px;
+            display: block;
+            text-align: right;
+        }
+
+        /* Recordatorios */
+        .reminder-item h3 {
+            margin-top: 0;
+            color: var(--primary-color);
+            font-size: 18px;
+        }
+
+        .reminder-item p {
+            margin: 5px 0;
+            color: #636e72;
+            font-size: 14px;
+        }
+
+        /* Botón de cierre adicional para modales */
+        .modal-close-button {
+            display: block;
+            margin: 20px auto 0 auto;
+            padding: 10px 20px;
+            background-color: var(--primary-color);
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+            height: 40px; /* Corregido para mostrar el botón correctamente */
+            line-height: 20px; /* Ajustado para centrar el texto verticalmente */
+        }
+
+        .modal-close-button:hover {
+            background-color: #341f97;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            #main-container {
+                flex-direction: column;
+                padding: 20px;
+            }
+
+            #left-sidebar {
+                width: 100%;
+                position: static;
+                top: auto;
+            }
+
+            .calendar {
+                grid-template-columns: repeat(7, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            #legend {
+                margin-left: 0;
+                margin-top: 10px;
+            }
+
+            #hamburger-menu, #progress-icon {
+                margin-left: 0;
+                margin-top: 10px;
+            }
+
+            .calendar {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .day-name {
+                display: none;
+            }
+        }
+
+        @media (max-width: 500px) {
+            .calendar {
+                grid-template-columns: repeat(1, 1fr);
+            }
+
+            .day {
+                min-height: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Calendario</h1>
+        <div id="legend">
+            <!-- Leyenda de colores -->
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #fab1a0;"></div>
+                <span>Prueba</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #55efc4;"></div>
+                <span>Tarea/Entrega</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: linear-gradient(135deg, #fab1a0 50%, #55efc4 50%);"></div>
+                <span>Prueba y Tarea</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #81ecec;"></div>
+                <span>Otro</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: transparent; border: none; position: relative;">
+                    <div style="position: absolute; top:0; left:0; width:16px; height:16px; background-image: linear-gradient(135deg, transparent 45%, #ff7675 45%, #ff7675 55%, transparent 55%), linear-gradient(225deg, transparent 45%, #ff7675 45%, #ff7675 55%, transparent 55%); background-size: 100% 100%; opacity: 0.3; border-radius: 4px;"></div>
+                </div>
+                <span>Día pasado</span>
+            </div>
+        </div>
+        <div id="hamburger-menu" title="Próximos Eventos">☰</div>
+        <div id="progress-icon" title="Progreso">📈</div>
+    </header>
+
+    <div id="main-container">
+        <div id="left-sidebar">
+            <div id="reminders">
+                <!-- Recordatorios se mostrarán aquí -->
+            </div>
+        </div>
+        <div id="main-content">
+            <div id="month-year">
+                <span id="prev" title="Mes Anterior">◄</span>
+                <span id="monthYearText"></span>
+                <span id="next" title="Mes Siguiente">►</span>
+            </div>
+
+            <div id="calendar" class="calendar"></div>
+        </div>
+    </div>
+
+    <!-- Modal para agregar entrada -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span id="close" class="close">&times;</span>
+            <h2 id="modal-date"></h2>
+            
+            <!-- Campo para ingresar el contenido de la entrada -->
+            <label for="entry-text">Contenido:</label>
+            <textarea id="entry-text" rows="5" placeholder="Escribe tu entrada aquí..." required></textarea><br><br>
+            
+            <button id="save-button">Guardar</button>
+            <button class="modal-close-button">Cerrar</button>
+        </div>
+    </div>
+
+    <!-- Modal para mostrar eventos próximos -->
+    <div id="event-modal">
+        <h2>Próximos Eventos</h2>
+        <span id="close-event-modal" class="close">&times;</span>
+        <div id="event-list"></div>
+        <button class="modal-close-button">Cerrar</button>
+    </div>
+
+    <!-- Modal para mostrar progreso -->
+    <div id="progress-modal">
+        <h2>Progreso</h2>
+        <span id="close-progress-modal" class="close">&times;</span>
+        <div id="progress-list">
+            <!-- Iconos de progresos individuales -->
+            <div id="progress-icons">
+                <div class="progress-icon active" data-id="1">1</div>
+                <div class="progress-icon" data-id="2">2</div>
+                <div class="progress-icon" data-id="3">3</div>
+                <div class="progress-icon" data-id="4">4</div>
+                <div class="progress-icon" data-id="5">5</div>
+            </div>
+
+            <!-- Contenedores de progresos individuales -->
+            <div id="progress-contents">
+                <!-- Progreso 1 -->
+                <div class="progress-item active" id="progress-item-1">
+                    <!-- Campo para ingresar el título -->
+                    <label for="progress-title-1">Título del progreso 1: </label>
+                    <input type="text" id="progress-title-1" placeholder="Ingrese el título"><br><br>
+                    <label for="start-date-1">Fecha de Inicio: </label>
+                    <input type="date" id="start-date-1"><br><br>
+                    <label for="end-date-1">Fecha de Fin: </label>
+                    <input type="date" id="end-date-1"><br><br>
+                    <div class="day-checkboxes" id="day-checkboxes-1">
+                        <label><input type="checkbox" value="1"> Lunes</label>
+                        <label><input type="checkbox" value="2"> Martes</label>
+                        <label><input type="checkbox" value="3"> Miércoles</label>
+                        <label><input type="checkbox" value="4"> Jueves</label>
+                        <label><input type="checkbox" value="5"> Viernes</label>
+                        <label><input type="checkbox" value="6"> Sábado</label>
+                        <label><input type="checkbox" value="0"> Domingo</label>
+                    </div>
+                    <span id="custom-progress-percentage-1"> (0 horas de 0 horas)</span><br><br>
+                    <div class="custom-progress-rectangle">
+                        <div class="custom-progress-bar" id="custom-progress-bar-1"></div>
+                    </div>
+                    <button class="calculate-progress" data-id="1">Calcular Progreso</button>
+
+                    <!-- Barra de progreso diaria -->
+                    <div class="progress-inputs">
+                        <label for="manual-increment-1">Progreso a añadir: </label>
+                        <input type="number" id="manual-increment-1" min="1" value="1">
+                    </div>
+                    <div class="progress-buttons">
+                        <button class="add-manual-progress" data-id="1">Añadir</button>
+                        <button class="reset-manual-progress" data-id="1">Reiniciar</button>
+                    </div>
+                    <div class="manual-progress-bar-container">
+                        <div class="manual-progress-bar" id="manual-progress-bar-1"></div>
+                    </div>
+                    <span id="manual-progress-count-1" class="manual-progress-count">(0/0)</span><br><br>
+                </div>
+
+                <!-- Progreso 2 -->
+                <div class="progress-item" id="progress-item-2">
+                    <!-- Campo para ingresar el título -->
+                    <label for="progress-title-2">Título del progreso 2: </label>
+                    <input type="text" id="progress-title-2" placeholder="Ingrese el título"><br><br>
+                    <label for="start-date-2">Fecha de Inicio: </label>
+                    <input type="date" id="start-date-2"><br><br>
+                    <label for="end-date-2">Fecha de Fin: </label>
+                    <input type="date" id="end-date-2"><br><br>
+                    <div class="day-checkboxes" id="day-checkboxes-2">
+                        <label><input type="checkbox" value="1"> Lunes</label>
+                        <label><input type="checkbox" value="2"> Martes</label>
+                        <label><input type="checkbox" value="3"> Miércoles</label>
+                        <label><input type="checkbox" value="4"> Jueves</label>
+                        <label><input type="checkbox" value="5"> Viernes</label>
+                        <label><input type="checkbox" value="6"> Sábado</label>
+                        <label><input type="checkbox" value="0"> Domingo</label>
+                    </div>
+                    <span id="custom-progress-percentage-2"> (0 horas de 0 horas)</span><br><br>
+                    <div class="custom-progress-rectangle">
+                        <div class="custom-progress-bar" id="custom-progress-bar-2"></div>
+                    </div>
+                    <button class="calculate-progress" data-id="2">Calcular Progreso</button>
+
+                    <!-- Barra de progreso diaria -->
+                    <div class="progress-inputs">
+                        <label for="manual-increment-2">Progreso a añadir: </label>
+                        <input type="number" id="manual-increment-2" min="1" value="1">
+                    </div>
+                    <div class="progress-buttons">
+                        <button class="add-manual-progress" data-id="2">Añadir</button>
+                        <button class="reset-manual-progress" data-id="2">Reiniciar</button>
+                    </div>
+                    <div class="manual-progress-bar-container">
+                        <div class="manual-progress-bar" id="manual-progress-bar-2"></div>
+                    </div>
+                    <span id="manual-progress-count-2" class="manual-progress-count">(0/0)</span><br><br>
+                </div>
+
+                <!-- Progreso 3 -->
+                <div class="progress-item" id="progress-item-3">
+                    <!-- Campo para ingresar el título -->
+                    <label for="progress-title-3">Título del progreso 3: </label>
+                    <input type="text" id="progress-title-3" placeholder="Ingrese el título"><br><br>
+                    <label for="start-date-3">Fecha de Inicio: </label>
+                    <input type="date" id="start-date-3"><br><br>
+                    <label for="end-date-3">Fecha de Fin: </label>
+                    <input type="date" id="end-date-3"><br><br>
+                    <div class="day-checkboxes" id="day-checkboxes-3">
+                        <label><input type="checkbox" value="1"> Lunes</label>
+                        <label><input type="checkbox" value="2"> Martes</label>
+                        <label><input type="checkbox" value="3"> Miércoles</label>
+                        <label><input type="checkbox" value="4"> Jueves</label>
+                        <label><input type="checkbox" value="5"> Viernes</label>
+                        <label><input type="checkbox" value="6"> Sábado</label>
+                        <label><input type="checkbox" value="0"> Domingo</label>
+                    </div>
+                    <span id="custom-progress-percentage-3"> (0 horas de 0 horas)</span><br><br>
+                    <div class="custom-progress-rectangle">
+                        <div class="custom-progress-bar" id="custom-progress-bar-3"></div>
+                    </div>
+                    <button class="calculate-progress" data-id="3">Calcular Progreso</button>
+
+                    <!-- Barra de progreso diaria -->
+                    <div class="progress-inputs">
+                        <label for="manual-increment-3">Progreso a añadir: </label>
+                        <input type="number" id="manual-increment-3" min="1" value="1">
+                    </div>
+                    <div class="progress-buttons">
+                        <button class="add-manual-progress" data-id="3">Añadir</button>
+                        <button class="reset-manual-progress" data-id="3">Reiniciar</button>
+                    </div>
+                    <div class="manual-progress-bar-container">
+                        <div class="manual-progress-bar" id="manual-progress-bar-3"></div>
+                    </div>
+                    <span id="manual-progress-count-3" class="manual-progress-count">(0/0)</span><br><br>
+                </div>
+
+                <!-- Progreso 4 -->
+                <div class="progress-item" id="progress-item-4">
+                    <!-- Campo para ingresar el título -->
+                    <label for="progress-title-4">Título del progreso 4: </label>
+                    <input type="text" id="progress-title-4" placeholder="Ingrese el título"><br><br>
+                    <label for="start-date-4">Fecha de Inicio: </label>
+                    <input type="date" id="start-date-4"><br><br>
+                    <label for="end-date-4">Fecha de Fin: </label>
+                    <input type="date" id="end-date-4"><br><br>
+                    <div class="day-checkboxes" id="day-checkboxes-4">
+                        <label><input type="checkbox" value="1"> Lunes</label>
+                        <label><input type="checkbox" value="2"> Martes</label>
+                        <label><input type="checkbox" value="3"> Miércoles</label>
+                        <label><input type="checkbox" value="4"> Jueves</label>
+                        <label><input type="checkbox" value="5"> Viernes</label>
+                        <label><input type="checkbox" value="6"> Sábado</label>
+                        <label><input type="checkbox" value="0"> Domingo</label>
+                    </div>
+                    <span id="custom-progress-percentage-4"> (0 horas de 0 horas)</span><br><br>
+                    <div class="custom-progress-rectangle">
+                        <div class="custom-progress-bar" id="custom-progress-bar-4"></div>
+                    </div>
+                    <button class="calculate-progress" data-id="4">Calcular Progreso</button>
+
+                    <!-- Barra de progreso diaria -->
+                    <div class="progress-inputs">
+                        <label for="manual-increment-4">Progreso a añadir: </label>
+                        <input type="number" id="manual-increment-4" min="1" value="1">
+                    </div>
+                    <div class="progress-buttons">
+                        <button class="add-manual-progress" data-id="4">Añadir</button>
+                        <button class="reset-manual-progress" data-id="4">Reiniciar</button>
+                    </div>
+                    <div class="manual-progress-bar-container">
+                        <div class="manual-progress-bar" id="manual-progress-bar-4"></div>
+                    </div>
+                    <span id="manual-progress-count-4" class="manual-progress-count">(0/0)</span><br><br>
+                </div>
+
+                <!-- Progreso 5 -->
+                <div class="progress-item" id="progress-item-5">
+                    <!-- Campo para ingresar el título -->
+                    <label for="progress-title-5">Título del progreso 5: </label>
+                    <input type="text" id="progress-title-5" placeholder="Ingrese el título"><br><br>
+                    <label for="start-date-5">Fecha de Inicio: </label>
+                    <input type="date" id="start-date-5"><br><br>
+                    <label for="end-date-5">Fecha de Fin: </label>
+                    <input type="date" id="end-date-5"><br><br>
+                    <div class="day-checkboxes" id="day-checkboxes-5">
+                        <label><input type="checkbox" value="1"> Lunes</label>
+                        <label><input type="checkbox" value="2"> Martes</label>
+                        <label><input type="checkbox" value="3"> Miércoles</label>
+                        <label><input type="checkbox" value="4"> Jueves</label>
+                        <label><input type="checkbox" value="5"> Viernes</label>
+                        <label><input type="checkbox" value="6"> Sábado</label>
+                        <label><input type="checkbox" value="0"> Domingo</label>
+                    </div>
+                    <span id="custom-progress-percentage-5"> (0 horas de 0 horas)</span><br><br>
+                    <div class="custom-progress-rectangle">
+                        <div class="custom-progress-bar" id="custom-progress-bar-5"></div>
+                    </div>
+                    <button class="calculate-progress" data-id="5">Calcular Progreso</button>
+
+                    <!-- Barra de progreso diaria -->
+                    <div class="progress-inputs">
+                        <label for="manual-increment-5">Progreso a añadir: </label>
+                        <input type="number" id="manual-increment-5" min="1" value="1">
+                    </div>
+                    <div class="progress-buttons">
+                        <button class="add-manual-progress" data-id="5">Añadir</button>
+                        <button class="reset-manual-progress" data-id="5">Reiniciar</button>
+                    </div>
+                    <div class="manual-progress-bar-container">
+                        <div class="manual-progress-bar" id="manual-progress-bar-5"></div>
+                    </div>
+                    <span id="manual-progress-count-5" class="manual-progress-count">(0/0)</span><br><br>
+                </div>
+            </div>
+        </div>
+        <button class="modal-close-button">Cerrar</button>
+    </div>
+
+    <script>
+        // JavaScript para generar el calendario y manejar las entradas
+
+        const calendar = document.getElementById('calendar');
+        const modal = document.getElementById('modal');
+        const closeBtn = document.getElementById('close');
+        const modalDate = document.getElementById('modal-date');
+        const entryText = document.getElementById('entry-text');
+        const saveButton = document.getElementById('save-button');
+        const monthYearText = document.getElementById('monthYearText');
+        const prevBtn = document.getElementById('prev');
+        const nextBtn = document.getElementById('next');
+
+        const hamburgerMenu = document.getElementById('hamburger-menu');
+        const eventModal = document.getElementById('event-modal');
+        const closeEventModal = document.getElementById('close-event-modal');
+        const eventList = document.getElementById('event-list');
+
+        const progressIcon = document.getElementById('progress-icon');
+        const progressModal = document.getElementById('progress-modal');
+        const closeProgressModal = document.getElementById('close-progress-modal');
+        const progressIcons = document.querySelectorAll('.progress-icon');
+        const progressItems = document.querySelectorAll('.progress-item');
+
+        let selectedDate;
+        let currentYear;
+        let currentMonth;
+
+        // Variables para almacenar los totales y progresos manuales
+        const customProgressTotals = {};
+        const manualProgressData = {};
+        const progressTitles = {};
+
+        // Función para generar el calendario del mes actual
+        function generateCalendar(year, month) {
+            calendar.innerHTML = '';
+
+            currentYear = year;
+            currentMonth = month;
+
+            const firstDay = new Date(year, month, 1).getDay(); // Día de la semana del primer día
+            const daysInMonth = new Date(year, month + 1, 0).getDate(); // Número de días en el mes
+
+            // Mostrar el mes y año actual
+            const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            monthYearText.textContent = `${months[month]} ${year}`;
+
+            // Añadir los nombres de los días de la semana
+            const daysOfWeek = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+            for (let day of daysOfWeek) {
+                const dayName = document.createElement('div');
+                dayName.textContent = day;
+                dayName.classList.add('day-name');
+                calendar.appendChild(dayName);
+            }
+
+            // Añadir días vacíos al inicio si el mes no empieza en lunes
+            let blankDays = firstDay === 0 ? 6 : firstDay - 1; // Ajuste para que la semana comience en lunes
+            for (let i = 0; i < blankDays; i++) {
+                const emptyCell = document.createElement('div');
+                calendar.appendChild(emptyCell);
+            }
+
+            // Añadir los días del mes
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month, day);
+                const dateString = formatDateKey(date);
+
+                const dayCell = document.createElement('div');
+                dayCell.classList.add('day');
+                dayCell.textContent = day;
+
+                // Marcar el día de hoy
+                const today = new Date();
+                if (date.toDateString() === today.toDateString()) {
+                    dayCell.classList.add('today');
+                }
+
+                // Marcar días pasados
+                if (date < today && date.toDateString() !== today.toDateString()) {
+                    dayCell.classList.add('past');
+                }
+
+                // Obtener contenido almacenado
+                const content = localStorage.getItem(dateString);
+
+                // Variables para palabras clave
+                let hasPrueba = false;
+                let hasTarea = false;
+
+                if (content) {
+                    const lowerContent = content.toLowerCase();
+
+                    hasPrueba = lowerContent.includes('prueba');
+                    hasTarea = lowerContent.includes('tarea') || lowerContent.includes('entrega');
+
+                    if (hasPrueba && hasTarea) {
+                        // Si tiene ambas palabras clave, dividir el cuadrado
+                        dayCell.classList.add('has-multiple');
+                    } else if (hasPrueba) {
+                        dayCell.classList.add('has-prueba');
+                    } else if (hasTarea) {
+                        dayCell.classList.add('has-tarea');
+                    } else {
+                        dayCell.classList.add('has-entry-no-keyword');
+                    }
+                }
+
+                dayCell.addEventListener('click', () => openModal(date));
+
+                calendar.appendChild(dayCell);
+            }
+
+            // Actualizar recordatorios
+            displayReminders();
+        }
+
+        function openModal(date) {
+            selectedDate = date;
+            const dateString = formatDateKey(date);
+            modalDate.textContent = `Entrada para el ${date.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
+            entryText.value = localStorage.getItem(dateString) || '';
+            modal.classList.add('active');
+        }
+
+        // Función para cerrar todos los modales
+        function closeAllModals() {
+            modal.classList.remove('active');
+            eventModal.classList.remove('active');
+            progressModal.classList.remove('active');
+        }
+
+        // Event listeners para cerrar el modal principal
+        closeBtn.addEventListener('click', () => {
+            modal.classList.remove('active');
+        });
+
+        // Event listener para guardar la entrada y enviarla al backend
+        saveButton.addEventListener('click', async () => {
+            const dateString = formatDateKey(selectedDate);
+            const content = entryText.value.trim();
+
+            // Validar que el campo de contenido no esté vacío
+            if (!content) {
+                alert('Por favor, completa el campo de contenido.');
+                return;
+            }
+
+            // Enviar la entrada al backend
+            try {
+                const response = await fetch('http://localhost:3000/add-entry', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ date: dateString, content }),
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert('Entrada guardada exitosamente.');
+                } else {
+                    alert('Error al guardar la entrada: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error al enviar la entrada al backend:', error);
+                alert('Error al guardar la entrada.');
+            }
+
+            // Cerrar el modal y actualizar el calendario
+            modal.classList.remove('active');
+            generateCalendar(currentYear, currentMonth);
+            displayReminders();
+
+            // Limpiar el campo de contenido
+            entryText.value = '';
+        });
+
+        // Navegar entre meses
+        prevBtn.addEventListener('click', () => {
+            if (currentMonth === 0) {
+                currentYear--;
+                currentMonth = 11;
+            } else {
+                currentMonth--;
+            }
+            generateCalendar(currentYear, currentMonth);
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentMonth === 11) {
+                currentYear++;
+                currentMonth = 0;
+            } else {
+                currentMonth++;
+            }
+            generateCalendar(currentYear, currentMonth);
+        });
+
+        // Cerrar los modales si se hace clic fuera del contenido
+        window.addEventListener('click', (event) => {
+            if (event.target == modal) {
+                modal.classList.remove('active');
+            }
+            if (event.target == eventModal) {
+                eventModal.classList.remove('active');
+            }
+            if (event.target == progressModal) {
+                progressModal.classList.remove('active');
+            }
+        });
+
+        // Generar el calendario del mes actual al cargar la página
+        const currentDate = new Date();
+        generateCalendar(currentDate.getFullYear(), currentDate.getMonth());
+
+        // Funcionalidad del menú de hamburguesa
+        hamburgerMenu.addEventListener('click', () => {
+            eventModal.classList.add('active');
+            displayUpcomingEvents();
+        });
+
+        // Event listeners para cerrar el modal de eventos
+        closeEventModal.addEventListener('click', () => {
+            eventModal.classList.remove('active');
+        });
+
+        // Funcionalidad del icono de progreso
+        progressIcon.addEventListener('click', () => {
+            progressModal.classList.add('active');
+        });
+
+        // Event listeners para cerrar el modal de progreso
+        closeProgressModal.addEventListener('click', () => {
+            progressModal.classList.remove('active');
+        });
+
+        // Funcionalidad para cambiar entre progresos
+        progressIcons.forEach(icon => {
+            icon.addEventListener('click', () => {
+                const id = icon.getAttribute('data-id');
+
+                // Remover clase activa de todos los iconos y progresos
+                progressIcons.forEach(i => i.classList.remove('active'));
+                progressItems.forEach(item => item.classList.remove('active'));
+
+                // Agregar clase activa al icono y progreso seleccionados
+                icon.classList.add('active');
+                document.getElementById(`progress-item-${id}`).classList.add('active');
+            });
+        });
+
+        // Función para formatear la fecha como clave
+        function formatDateKey(date) {
+            const year = date.getFullYear();
+            const month = ('0' + (date.getMonth() + 1)).slice(-2);
+            const day = ('0' + date.getDate()).slice(-2);
+            return `${year}-${month}-${day}`;
+        }
+
+        // Función para mostrar eventos próximos
+        function displayUpcomingEvents() {
+            eventList.innerHTML = '';
+
+            const today = new Date();
+            const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+            let events = [];
+
+            // Obtener todas las entradas de localStorage
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (/^\d{4}-\d{2}-\d{2}$/.test(key)) {
+                    const [year, month, day] = key.split('-');
+                    const eventDate = new Date(year, month - 1, day);
+                    const eventDateMidnight = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
+
+                    if (eventDateMidnight >= todayMidnight) {
+                        events.push({ date: eventDate, content: localStorage.getItem(key) });
+                    }
+                }
+            }
+
+            // Ordenar eventos por fecha
+            events.sort((a, b) => a.date - b.date);
+
+            if (events.length === 0) {
+                eventList.innerHTML = '<p>No hay eventos próximos.</p>';
+                return;
+            }
+
+            // Mostrar eventos
+            for (let event of events) {
+                const eventItem = document.createElement('div');
+                eventItem.classList.add('event-item');
+
+                const eventDate = document.createElement('div');
+                eventDate.classList.add('event-date');
+                eventDate.textContent = event.date.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+                const eventContent = document.createElement('div');
+                eventContent.classList.add('event-content');
+                eventContent.textContent = event.content;
+
+                eventItem.appendChild(eventDate);
+                eventItem.appendChild(eventContent);
+
+                eventList.appendChild(eventItem);
+            }
+        }
+
+        // Función para mostrar los recordatorios de la próxima prueba y tarea
+        function displayReminders() {
+            const today = new Date();
+            // Normalizar la fecha de hoy al inicio del día
+            const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+            let closestPrueba = null;
+            let closestTarea = null;
+            let minDaysToPrueba = Infinity;
+            let minDaysToTarea = Infinity;
+
+            // Obtener todas las entradas de localStorage
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (/^\d{4}-\d{2}-\d{2}$/.test(key)) {
+                    const [year, month, day] = key.split('-');
+                    const eventDate = new Date(year, month - 1, day);
+                    // Normalizar la fecha del evento al inicio del día
+                    const eventDateMidnight = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
+                    const content = localStorage.getItem(key).toLowerCase();
+
+                    if (eventDateMidnight >= todayMidnight) {
+                        const daysDifference = Math.ceil((eventDateMidnight - todayMidnight) / (1000 * 60 * 60 * 24));
+
+                        if (content.includes('prueba')) {
+                            if (daysDifference < minDaysToPrueba) {
+                                minDaysToPrueba = daysDifference;
+                                closestPrueba = {
+                                    date: eventDate,
+                                    content: localStorage.getItem(key),
+                                    daysRemaining: daysDifference
+                                };
+                            }
+                        }
+
+                        if (content.includes('tarea') || content.includes('entrega')) {
+                            if (daysDifference < minDaysToTarea) {
+                                minDaysToTarea = daysDifference;
+                                closestTarea = {
+                                    date: eventDate,
+                                    content: localStorage.getItem(key),
+                                    daysRemaining: daysDifference
+                                };
+                            }
+                        }
+                    }
+                }
+            }
+
+            const remindersDiv = document.getElementById('reminders');
+            remindersDiv.innerHTML = '';
+
+            if (closestPrueba) {
+                const pruebaDiv = document.createElement('div');
+                pruebaDiv.classList.add('reminder-item');
+
+                const pruebaTitle = document.createElement('h3');
+                pruebaTitle.textContent = 'Próxima Prueba';
+                pruebaDiv.appendChild(pruebaTitle);
+
+                const pruebaDate = document.createElement('p');
+                pruebaDate.textContent = `Fecha: ${closestPrueba.date.toLocaleDateString('es-ES')}`;
+                pruebaDiv.appendChild(pruebaDate);
+
+                const pruebaDays = document.createElement('p');
+                pruebaDays.textContent = `Faltan ${closestPrueba.daysRemaining} día(s)`;
+                pruebaDiv.appendChild(pruebaDays);
+
+                remindersDiv.appendChild(pruebaDiv);
+            }
+
+            if (closestTarea) {
+                const tareaDiv = document.createElement('div');
+                tareaDiv.classList.add('reminder-item');
+
+                const tareaTitle = document.createElement('h3');
+                tareaTitle.textContent = 'Próxima Tarea/Entrega';
+                tareaDiv.appendChild(tareaTitle);
+
+                const tareaDate = document.createElement('p');
+                tareaDate.textContent = `Fecha: ${closestTarea.date.toLocaleDateString('es-ES')}`;
+                tareaDiv.appendChild(tareaDate);
+
+                const tareaDays = document.createElement('p');
+                tareaDays.textContent = `Faltan ${closestTarea.daysRemaining} día(s)`;
+                tareaDiv.appendChild(tareaDays);
+
+                remindersDiv.appendChild(tareaDiv);
+            }
+        }
+
+        // Función para calcular el progreso personalizado para un progreso específico
+        function calculateCustomProgress(id) {
+            const startDateInput = document.getElementById(`start-date-${id}`);
+            const endDateInput = document.getElementById(`end-date-${id}`);
+            const customProgressBar = document.getElementById(`custom-progress-bar-${id}`);
+            const customProgressPercentageText = document.getElementById(`custom-progress-percentage-${id}`);
+            // Corregir la referencia del contenedor de checkboxes
+            const dayCheckboxesContainer = document.getElementById(`day-checkboxes-${id}`);
+            const dayCheckboxes = dayCheckboxesContainer.querySelectorAll('input[type="checkbox"]');
+
+            const startDateValue = startDateInput.value;
+            const endDateValue = endDateInput.value;
+
+            if (!startDateValue || !endDateValue) {
+                alert('Por favor, ingresa ambas fechas.');
+                return;
+            }
+
+            const startDate = new Date(startDateValue);
+            const endDate = new Date(endDateValue);
+
+            if (endDate < startDate) {
+                alert('La fecha de fin debe ser posterior a la fecha de inicio.');
+                return;
+            }
+
+            // Obtener los días seleccionados
+            let selectedDays = [];
+            dayCheckboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    selectedDays.push(parseInt(checkbox.value));
+                }
+            });
+
+            if (selectedDays.length === 0) {
+                alert('Por favor, selecciona al menos un día de la semana.');
+                return;
+            }
+
+            // Calcular el número total de horas posibles (desde inicio hasta fin)
+            let totalPossibleHours = 0;
+            let dateIterator = new Date(startDate);
+
+            while (dateIterator <= endDate) {
+                if (selectedDays.includes(dateIterator.getDay())) {
+                    totalPossibleHours += 1;
+                }
+                dateIterator.setDate(dateIterator.getDate() + 1);
+            }
+
+            if (totalPossibleHours === 0) {
+                alert('No hay días seleccionados entre las fechas dadas.');
+                return;
+            }
+
+            // Calcular el número de horas completadas (desde inicio hasta hoy o fin)
+            const today = new Date();
+            let lastDate = today < endDate ? today : endDate;
+
+            let completedHours = 0;
+            dateIterator = new Date(startDate);
+
+            while (dateIterator <= lastDate) {
+                if (selectedDays.includes(dateIterator.getDay())) {
+                    completedHours += 1;
+                }
+                dateIterator.setDate(dateIterator.getDate() + 1);
+            }
+
+            // Calcular el porcentaje de progreso
+            const progressPercentage = (completedHours / totalPossibleHours) * 100;
+            customProgressBar.style.width = `${progressPercentage}%`;
+            customProgressPercentageText.textContent = ` (${completedHours} horas de ${totalPossibleHours} horas)`;
+
+            // Guardar datos en localStorage
+            localStorage.setItem(`customProgressData${id}`, JSON.stringify({
+                startDate: startDateValue,
+                endDate: endDateValue,
+                selectedDays: selectedDays
+            }));
+
+            // Almacenar el total de horas para el progreso manual (barra diaria)
+            customProgressTotals[id] = completedHours;
+
+            // Actualizar la barra de progreso diaria
+            updateManualProgressBar(id);
+
+            // Guardar el total en localStorage
+            localStorage.setItem(`customProgressTotals${id}`, completedHours);
+        }
+
+        // Función para actualizar la barra de progreso diaria
+        function updateManualProgressBar(id) {
+            const manualProgressBar = document.getElementById(`manual-progress-bar-${id}`);
+            const manualProgressCountText = document.getElementById(`manual-progress-count-${id}`);
+
+            const total = customProgressTotals[id] || 0;
+            const currentManualProgress = manualProgressData[id]?.currentProgress || 0;
+
+            const progressPercentage = total > 0 ? (currentManualProgress / total) * 100 : 0;
+            manualProgressBar.style.width = `${progressPercentage}%`;
+            manualProgressCountText.textContent = `(${currentManualProgress}/${total})`;
+        }
+
+        // Funcionalidad para calcular el progreso basado en los días seleccionados
+        const calculateProgressButtons = document.querySelectorAll('.calculate-progress');
+        calculateProgressButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const id = button.getAttribute('data-id');
+                calculateCustomProgress(id);
+            });
+        });
+
+        // Funcionalidad para los progresos manuales (barra diaria)
+        for (let id = 1; id <= 5; id++) {
+            const manualIncrementInput = document.getElementById(`manual-increment-${id}`);
+            const addManualProgressButton = document.querySelector(`.add-manual-progress[data-id="${id}"]`);
+            const resetManualProgressButton = document.querySelector(`.reset-manual-progress[data-id="${id}"]`);
+
+            // Restaurar progreso manual al cargar la página
+            const savedManualProgressData = localStorage.getItem(`manualProgressData${id}`);
+            if (savedManualProgressData) {
+                manualProgressData[id] = JSON.parse(savedManualProgressData);
+            }
+
+            // Añadir progreso manual
+            addManualProgressButton.addEventListener('click', () => {
+                const total = customProgressTotals[id] || 0;
+                const increment = parseInt(manualIncrementInput.value);
+                if (!isNaN(total) && !isNaN(increment) && total > 0) {
+                    manualProgressData[id] = manualProgressData[id] || { currentProgress: 0 };
+                    manualProgressData[id].currentProgress += increment;
+                    if (manualProgressData[id].currentProgress > total) {
+                        manualProgressData[id].currentProgress = total;
+                    }
+                    // Guardar progreso en localStorage
+                    localStorage.setItem(`manualProgressData${id}`, JSON.stringify(manualProgressData[id]));
+                    // Actualizar barra de progreso
+                    updateManualProgressBar(id);
+                }
+            });
+
+            // Reiniciar progreso manual
+            resetManualProgressButton.addEventListener('click', () => {
+                manualProgressData[id] = { currentProgress: 0 };
+                // Guardar progreso en localStorage
+                localStorage.setItem(`manualProgressData${id}`, JSON.stringify(manualProgressData[id]));
+                // Actualizar barra de progreso
+                updateManualProgressBar(id);
+            });
+        }
+
+        // Función para guardar y restaurar los títulos de progreso
+        function saveProgressTitle(id) {
+            const titleInput = document.getElementById(`progress-title-${id}`);
+            const title = titleInput.value;
+            localStorage.setItem(`progressTitle${id}`, title);
+        }
+
+        function restoreProgressTitle(id) {
+            const titleInput = document.getElementById(`progress-title-${id}`);
+            const savedTitle = localStorage.getItem(`progressTitle${id}`);
+            if (savedTitle) {
+                titleInput.value = savedTitle;
+            }
+            // Guardar título en el objeto
+            progressTitles[id] = titleInput.value;
+        }
+
+        // Agregar eventos para guardar los títulos al cambiar
+        for (let id = 1; id <= 5; id++) {
+            const titleInput = document.getElementById(`progress-title-${id}`);
+            titleInput.addEventListener('input', () => {
+                saveProgressTitle(id);
+            });
+        }
+
+        // Restaurar datos al cargar la página
+        window.addEventListener('load', () => {
+            // Restaurar progreso de los 5 progresos individuales
+            for (let id = 1; id <= 5; id++) {
+                const savedCustomProgressData = localStorage.getItem(`customProgressData${id}`);
+                if (savedCustomProgressData) {
+                    const customProgressData = JSON.parse(savedCustomProgressData);
+                    const startDateInput = document.getElementById(`start-date-${id}`);
+                    const endDateInput = document.getElementById(`end-date-${id}`);
+                    const dayCheckboxesContainer = document.getElementById(`day-checkboxes-${id}`);
+                    const dayCheckboxes = dayCheckboxesContainer.querySelectorAll('input[type="checkbox"]');
+
+                    startDateInput.value = customProgressData.startDate || '';
+                    endDateInput.value = customProgressData.endDate || '';
+
+                    // Restaurar días seleccionados
+                    if (Array.isArray(customProgressData.selectedDays)) {
+                        dayCheckboxes.forEach(checkbox => {
+                            if (customProgressData.selectedDays.includes(parseInt(checkbox.value))) {
+                                checkbox.checked = true;
+                            } else {
+                                checkbox.checked = false;
+                            }
+                        });
+                    }
+                    // Recalcular progreso
+                    calculateCustomProgress(id);
+                } else {
+                    // Asegurarse de actualizar la barra de progreso diaria
+                    updateManualProgressBar(id);
+                }
+
+                // Restaurar total de horas para la barra diaria
+                const savedCustomProgressTotal = localStorage.getItem(`customProgressTotals${id}`);
+                if (savedCustomProgressTotal) {
+                    customProgressTotals[id] = parseInt(savedCustomProgressTotal);
+                }
+
+                // Restaurar progreso manual
+                const savedManualProgressData = localStorage.getItem(`manualProgressData${id}`);
+                if (savedManualProgressData) {
+                    manualProgressData[id] = JSON.parse(savedManualProgressData);
+                }
+
+                // Actualizar barra de progreso diaria
+                updateManualProgressBar(id);
+
+                // Restaurar títulos
+                restoreProgressTitle(id);
+            }
+
+            // Agregar event listeners para los botones de cierre adicional
+            const closeButtons = document.querySelectorAll('.modal-close-button');
+            closeButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const modal = button.closest('.modal') || button.closest('#event-modal') || button.closest('#progress-modal');
+                    if (modal) {
+                        modal.classList.remove('active');
+                    }
+                });
+            });
+        });
+
+    </script>
+</body>
+</html>
